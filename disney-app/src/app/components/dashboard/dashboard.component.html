@@ -1,0 +1,134 @@
+<div class="page">
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">The Disney Archive Explorer</p>
+      <h1>Browse the archive</h1>
+      <p class="lede">
+        Search and filter thousands of characters. Favorites stay on this device.
+      </p>
+    </div>
+  </header>
+
+  <section class="toolbar" aria-label="Filters">
+    <div class="toolbar-row">
+      <label class="search-field">
+        <span class="visually-hidden">Search by name</span>
+        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+          />
+        </svg>
+        <input
+          type="search"
+          name="q"
+          placeholder="Search characters…"
+          autocomplete="off"
+          (input)="onSearchInput($event)"
+        />
+      </label>
+
+      <label class="toggle">
+        <input
+          type="checkbox"
+          [checked]="state.movieStarsOnly()"
+          (change)="onMovieStarsChange($event)"
+        />
+        <span>Show only movie stars</span>
+      </label>
+
+      <label class="toggle">
+        <input
+          type="checkbox"
+          [checked]="state.favoritesOnly()"
+          (change)="onFavoritesOnlyChange($event)"
+        />
+        <span>Show only favorites</span>
+      </label>
+    </div>
+
+    <div class="meta" role="status">
+      @if (state.loading()) {
+        <span>Loading characters…</span>
+      } @else if (state.error()) {
+        <span class="error">{{ state.error() }}</span>
+      } @else {
+        <span>
+          Showing <strong>{{ state.filteredCharacters().length }}</strong> of
+          <strong>{{ state.characters().length }}</strong>
+        </span>
+        @if (favorites.count() > 0) {
+          <span class="fav-meta"> · {{ favorites.count() }} favorite character{{ favorites.count() === 1 ? '' : 's' }}</span>
+        }
+      }
+    </div>
+  </section>
+
+  @if (state.error()) {
+    <div class="retry-wrap">
+      <button type="button" class="btn primary" (click)="state.load()">Retry load</button>
+    </div>
+  }
+
+  @if (!state.loading() && !state.error() && state.filteredCharacters().length === 0) {
+    @if (state.favoritesOnly() && favorites.count() === 0) {
+      <p class="empty">
+        Star characters on the grid or detail page to save favorites (this browser), then turn this filter on.
+      </p>
+    } @else if (state.favoritesOnly() && favorites.count() > 0) {
+      <p class="empty">No characters match your search among your favorites.</p>
+    } @else {
+      <p class="empty">No characters match your filters.</p>
+    }
+  }
+
+  @if (!state.loading() && !state.error() && state.filteredCharacters().length > 0) {
+    <cdk-virtual-scroll-viewport
+      class="viewport"
+      [itemSize]="rowHeight"
+      minBufferPx="600"
+      maxBufferPx="1200"
+    >
+      <div
+        *cdkVirtualFor="let row of rows(); trackBy: trackByRowIndex"
+        class="grid-row"
+        [style.gridTemplateColumns]="'repeat(' + columnCount() + ', minmax(0, 1fr))'"
+      >
+        @for (c of row; track c._id) {
+          <a class="card" [routerLink]="['/character', c._id]">
+            <div class="thumb">
+              <img
+                [src]="c.imageUrl || '/character-placeholder.svg'"
+                [alt]="'Portrait of ' + c.name"
+                loading="lazy"
+                decoding="async"
+                width="320"
+                height="400"
+                appImageFallback="/character-placeholder.svg"
+              />
+              <button
+                type="button"
+                class="fav"
+                [class.is-fav]="favorites.isFavorite(c._id)"
+                (click)="toggleFavorite(c._id, $event)"
+                [attr.aria-pressed]="favorites.isFavorite(c._id)"
+                [attr.aria-label]="
+                  favorites.isFavorite(c._id) ? 'Remove from favorites' : 'Add to favorites'
+                "
+              >
+                <span aria-hidden="true">{{ favorites.isFavorite(c._id) ? '&#9733;' : '&star;' }}</span>
+              </button>
+            </div>
+            <div class="card-body">
+              <h2 class="name">{{ c.name }}</h2>
+              <p class="films">
+                {{ c.films.length }} film{{ c.films.length === 1 ? '' : 's' }} ·
+                {{ c.tvShows.length }} TV show{{ c.tvShows.length === 1 ? '' : 's' }} ·
+                {{ c.videoGames.length }} video game{{ c.videoGames.length === 1 ? '' : 's' }}
+              </p>
+            </div>
+          </a>
+        }
+      </div>
+    </cdk-virtual-scroll-viewport>
+  }
+</div>

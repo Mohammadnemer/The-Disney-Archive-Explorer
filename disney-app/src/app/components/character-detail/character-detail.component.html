@@ -1,0 +1,79 @@
+<div class="page">
+  <a routerLink="/" class="back">← Back to archive</a>
+
+  @if (state.loading()) {
+    <p class="status">Loading…</p>
+  } @else if (state.error()) {
+    <p class="status error">{{ state.error() }}</p>
+    <p><a routerLink="/">Return home</a></p>
+  } @else if (character(); as c) {
+    <article class="detail">
+      <div class="media">
+        <img
+          [src]="c.imageUrl || '/character-placeholder.svg'"
+          [alt]="'Portrait of ' + c.name"
+          width="480"
+          height="600"
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+          appImageFallback="/character-placeholder.svg"
+        />
+      </div>
+      <div class="content">
+        <h1>{{ c.name }}</h1>
+        <button
+          type="button"
+          class="fav-btn"
+          [class.is-fav]="favorites.isFavorite(c._id)"
+          (click)="toggleFavorite(c._id)"
+          [attr.aria-pressed]="favorites.isFavorite(c._id)"
+        >
+          {{ favorites.isFavorite(c._id) ? '&#9733; Saved' : '&star; Add to favorites' }}
+        </button>
+
+        <section class="section" aria-labelledby="films-heading">
+          <h2 id="films-heading">Films ({{ c.films.length }})</h2>
+          @if (c.films.length === 0) {
+            <p class="muted">No films listed for this character.</p>
+          } @else {
+            <ul class="detail-list">
+              @for (film of c.films; track $index) {
+                <li>{{ film }}</li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="section" aria-labelledby="tv-heading">
+          <h2 id="tv-heading">TV shows ({{ c.tvShows.length }})</h2>
+          @if (c.tvShows.length === 0) {
+            <p class="muted">No TV shows listed for this character.</p>
+          } @else {
+            <ul class="detail-list">
+              @for (show of c.tvShows; track $index) {
+                <li>{{ show }}</li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="section" aria-labelledby="games-heading">
+          <h2 id="games-heading">Video games ({{ c.videoGames.length }})</h2>
+          @if (c.videoGames.length === 0) {
+            <p class="muted">No video games listed for this character.</p>
+          } @else {
+            <ul class="detail-list">
+              @for (game of c.videoGames; track $index) {
+                <li>{{ game }}</li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+    </article>
+  } @else {
+    <p class="status">Character not found.</p>
+    <p><a routerLink="/">Return to the archive</a></p>
+  }
+</div>
